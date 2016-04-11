@@ -1,0 +1,102 @@
+---
+title: "Clase 1"
+author: "Alan Muñoz"
+date: "April 11, 2016"
+output: html_document
+---
+clase 1
+```{r}
+expr = read.table("~/github/cei/expr.txt")
+boxplot(expr, col=rainbow(6), main="boxplot, raw data")
+
+par(mfrow=c(2,3))
+for (i in 1:ncol(expr)) {
+   hist(expr[,i], breaks=50, main=i, col="skyblue", xlab="gene expression")
+}
+
+exprNorm = expr
+
+for (i in 1:ncol(exprNorm)) {
+   exprNorm[,i] = exprNorm[,i] - median(exprNorm[,i])
+}
+
+par(mfrow=c(1,2))
+
+boxplot(expr, col=rainbow(6), main="raw data")
+boxplot(exprNorm, col=rainbow(6), main="normalized data")
+
+exprNorm <- exprNorm+abs(min(exprNorm))
+boxplot(exprNorm, col=rainbow(6), main="normalized data")
+
+mini = as.matrix(head(exprNorm, 3))
+
+apply(mini[,1:3], 1, mean)
+
+apply(mini[,4:6], 1, mean)
+#Normalizados
+koN_mean <- apply(exprNorm[,1:3],1,mean)
+wtN_mean <- apply(exprNorm[,4:6],1,mean)
+
+diffN_mean <- koN_mean-wtN_mean
+#Sin normalizar
+ko_mean <- apply(expr[,1:3],1,mean)
+wt_mean <- apply(expr[,4:6],1,mean)
+
+diff_mean <- ko_mean-wt_mean
+par(mfrow = c(1,2))
+hist(diff_mean, breaks = 50,col="red", main="Diferencias entre KO y WT sin normalizar", xlab="")
+hist(diffN_mean, breaks = 50,col="red", main="Diferencias entre KO y WT normalizados", xlab="")
+
+exprNorm$pvals=apply(exprNorm,1,function(x) {t.test(x[1:3],x[4:6])$p.value})
+
+#Pvals menores a 0.05
+length(exprNorm$pvals[exprNorm$pvals<0.05])
+
+#Pvals menores a 0.001
+length(exprNorm$pvals[exprNorm$pvals<0.001])
+```
+Utilizaremos simulaciones para iluminar el caso.
+```{r}
+randExpr <- expr
+
+for (i in 1:ncol(randExpr)) {
+   randExpr[,i] = rnorm(nrow(randExpr), mean=5, sd=1)
+}
+
+boxplot(randExpr, col=rainbow(ncol(randExpr)), main="Random expression")
+
+randExpr$pvals=apply(randExpr,1,function(x) {t.test(x[1:3],x[4:6])$p.value})
+
+randpvalues <- randExpr$pvals
+names(randpvalues) <- rownames(randExpr)
+head(randpvalues)
+hist(randpvalues, main = "P values aleatorios")
+hist(exprNorm$pvals, main="P values de experimento")
+
+umbrales <- c(0.1, 0.05, 0.01, 0.001)
+
+pvalues_filtered <- data.frame()
+for (i in umbrales){
+  print(paste("Umbral: ",i, sep=""))
+  print(paste("Random: ",length(randpvalues[randpvalues<i]),sep=""))
+  print(paste("Experimento: ",length(exprNorm$pvals[exprNorm$pvals<i]),sep=""))
+  #pvalues_filtered$random[i]<-length(randpvalues[randpvalues<i])
+  #pvalues_filtered$exp[i]<-length(exprNorm$pvals[exprNorm$pvals<i])
+}
+  ```
+
+
+Ejercicio: Cuántas letras "e" contiene texto? (obténganlo de dos maneras diferentes)
+```{r}
+texto = "Esta es una cadena de texto"
+length(gregexpr("[e]",texto,ignore.case=T)[[1]])
+length(strsplit(texto,"[Ee]")[[1]])-1
+
+```
+
+```{r}
+library(Biostrings)
+
+```
+Sección 3
+
